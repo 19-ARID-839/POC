@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Interview Assistant Dashboard</title>
+  <link rel="stylesheet" href="overlay.css" />
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>⚙ Menu</h2>
+    <button id="newChatBtn">🆕 New Chat</button>
+    <button id="clearChatBtn">🗑 Clear Chat</button>
+    <button id="logoutBtn">🚪 Logout</button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-container">
+    <!-- Hero -->
+    <div class="hero">
+      <h1>🤖 AI Interview Assistant</h1>
+      <p>Practice interviews with real-time voice interaction, AI-powered answers, and quick POCs.</p>
+    </div>
+
+    <!-- Dashboard Split -->
+    <div class="dashboard-content">
+      
+      <!-- Chat Section -->
+      <div class="chat-section">
+        <div class="chat-box" id="chatBox"></div>
+        <div class="hint-box">
+          <h4>💡 Suggested Questions:</h4>
+          <div class="hint-options" id="hintOptions"></div>
+        </div>
+        <div class="input-area">
+          <input type="text" id="userInput" placeholder="Type your answer..." />
+          <button id="sendBtn">Send</button>
+          <button id="micBtn" class="mic-button">🎤</button>
+        </div>
+      </div>
+
+      <!-- Quick POC Section -->
+      <div class="poc-section">
+        <h3>Quick POC</h3>
+        <div class="poc-preview">
+          <p>POC results or demo preview will appear here.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Popup -->
+  <div class="ai-popup" id="aiPopup">AI is answering <span class="loader"></span></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
+
+
+
