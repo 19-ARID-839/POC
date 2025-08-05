@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => { 
     let questions = [
         "What is your name?",
         "Tell me about your experience in web development.",
@@ -48,22 +48,52 @@ document.addEventListener("DOMContentLoaded", () => {
         aiPopup.style.display = show ? "block" : "none";
     }
 
-    // ✅ Simulate AI Response & Update POC Panel
-    function simulateAIResponse(answer) {
+    // ✅ Fetch AI Answer from Backend
+    async function fetchAIAnswer(question) {
         showAiPopup(true);
-        setTimeout(() => {
-            addMessage(answer, "question");
-            updatePocPanel(answer);
-            showAiPopup(false);
-        }, 1500);
+        try {
+            const response = await fetch("/api/answer", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question })
+            });
+            const data = await response.json();
+            if (data.answer) {
+                addMessage(data.answer, "question");
+                updatePocPanel(`AI Summary: ${data.answer}`);
+                playAnswer(data.answer); // 🔊 Play TTS
+            } else {
+                addMessage("⚠️ Failed to get AI response.", "question");
+            }
+        } catch (err) {
+            console.error("AI Answer Error:", err);
+            addMessage("⚠️ Error fetching AI response.", "question");
+        }
+        showAiPopup(false);
+    }
+
+    // ✅ Text-to-Speech (TTS)
+    async function playAnswer(answer) {
+        try {
+            const ttsResponse = await fetch("/api/tts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: answer })
+            });
+            const audioBlob = await ttsResponse.blob();
+            const audioURL = URL.createObjectURL(audioBlob);
+            new Audio(audioURL).play();
+        } catch (err) {
+            console.error("TTS Playback Error:", err);
+        }
     }
 
     // ✅ Handle Send Button Click
     sendBtn.addEventListener("click", () => {
         if (userInput.value.trim() !== "") {
-            const answer = userInput.value.trim();
-            addMessage(answer, "answer");
-            simulateAIResponse(`AI Response based on: "${answer}"`);
+            const question = userInput.value.trim();
+            addMessage(question, "answer");
+            fetchAIAnswer(question);
             userInput.value = "";
             nextQuestion();
         }
@@ -77,15 +107,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // ✅ Handle Suggested Question Click
     function handleSuggestedQuestion(hint) {
         addMessage(hint, "answer");
-        simulateAIResponse(`Here's an AI answer for: "${hint}"`);
+        fetchAIAnswer(hint);
     }
 
-    // ✅ Update Quick POC Panel with AI Summaries
+    // ✅ Update Quick POC Panel
     function updatePocPanel(content) {
-        pocPreview.innerHTML = `<p><strong>AI Summary:</strong> ${content}</p>`;
+        pocPreview.innerHTML = `<p><strong>${content}</strong></p>`;
     }
 
-    // ✅ Mic SST using Whisper API
+    // ✅ Mic STT using Whisper API (Backend)
     micBtn.addEventListener("click", async () => {
         micBtn.classList.toggle("active");
         if (micBtn.classList.contains("active")) {
@@ -98,19 +128,19 @@ document.addEventListener("DOMContentLoaded", () => {
             mediaRecorder.onstop = async () => {
                 const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                 const formData = new FormData();
-                formData.append('file', audioBlob);
-                formData.append('model', 'whisper-1');
+                formData.append('audio', audioBlob);
 
-                const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-                    method: "POST",
-                    headers: { Authorization: `Bearer YOUR_OPENAI_API_KEY` },
-                    body: formData
-                });
-                const result = await response.json();
-                if (result.text) {
-                    addMessage(result.text, "answer");
-                    simulateAIResponse(`AI feedback for: "${result.text}"`);
-                    nextQuestion();
+                try {
+                    const response = await fetch("/api/stt", { method: "POST", body: formData });
+                    const result = await response.json();
+                    if (result.text) {
+                        addMessage(result.text, "answer");
+                        fetchAIAnswer(result.text);
+                        nextQuestion();
+                    }
+                } catch (err) {
+                    console.error("STT Error:", err);
+                    addMessage("⚠️ Speech recognition failed.", "question");
                 }
             };
             setTimeout(() => mediaRecorder.stop(), 4000);
@@ -151,5 +181,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     askQuestion();
 });
+
 
 
